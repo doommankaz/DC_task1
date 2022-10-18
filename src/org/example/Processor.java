@@ -37,8 +37,6 @@ public class Processor {
         output.println("Content-Type: text/html; charset=utf-8");
         output.println();
         output.println("<html>");
-//        output.println("<head><title>Hello</title></head>");
-//        output.println("<body><p>Hello, world!</p></body>");
         output.println("</html>");
         output.flush();
         functions(output);
