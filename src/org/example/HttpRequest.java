@@ -20,18 +20,6 @@ public class HttpRequest {
         return requestLine;
     }
 
-    public Map<String, String> getHeaders() {
-        return headers;
-    }
-
-    public String getHeader(String key) {
-        return headers.get(key);
-    }
-
-    public String getMessageBody() {
-        return messageBody;
-    }
-
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -61,7 +49,7 @@ public class HttpRequest {
             if (idx == -1) {
                 throw new IOException("Invalid Header Parameter: " + header);
             }
-            headers.put(header.substring(0, idx), header.substring(idx + 2, header.length()));
+            headers.put(header.substring(0, idx), header.substring(idx + 2));
         }
 
         StringBuilder messageBody = new StringBuilder();

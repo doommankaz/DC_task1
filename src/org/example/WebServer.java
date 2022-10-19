@@ -14,7 +14,12 @@ public class WebServer {
         int port = args.length > 1 ? Integer.parseInt(args[1]) : 8080;
         // The maximum queue length for incoming connection
         int queueLength = args.length > 2 ? Integer.parseInt(args[2]) : 50;
-        ;
+
+        int maxNumOfThreads = (args.length > 1 ? Integer.parseInt(args[1]) : 4);
+
+        int currNumOfThreads = 0;
+
+
 
         try (ServerSocket serverSocket = new ServerSocket(port, queueLength)) {
             System.out.println("Web Server is starting up, listening at port " + port + ".");
@@ -23,22 +28,36 @@ public class WebServer {
             while (true) {
                 // Make the server socket wait for the next client request
                 Socket socket = serverSocket.accept();
+
                 System.out.println("Got connection!");
 
                 // To read input from the client
                 BufferedReader input = new BufferedReader(
                         new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
 
-                // Get request
-                HttpRequest request = HttpRequest.parse(input);
+                try {
+                    // Get request
+                    HttpRequest request = HttpRequest.parse(input);
+                    ThreadSafeQueue<HttpRequest> queue = new ThreadSafeQueue<>();
 
-                // Process request
-                Processor proc = new Processor(socket, request);
-                proc.process();
+                    // Process request
+                    Processor proc = new Processor(socket, request, queue, currNumOfThreads);
+                    proc.start();
+                    queue.add(request);
+                    currNumOfThreads++;
+
+                    if(currNumOfThreads == maxNumOfThreads){
+                        queue.add(null);
+                    }
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
             }
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
             ex.printStackTrace();
-        } finally {
+        }
+        finally {
             System.out.println("Server has been shutdown!");
         }
     }

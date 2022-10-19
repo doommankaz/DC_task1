@@ -9,13 +9,18 @@ import java.net.Socket;
 /**
  * Processor of HTTP request.
  */
-public class Processor {
+public class Processor<T> extends Thread{
+    private final int id;
     private final Socket socket;
     private final HttpRequest request;
+    private final ThreadSafeQueue<T> queue;
 
-    public Processor(Socket socket, HttpRequest request) {
+
+    public Processor(Socket socket, HttpRequest request, ThreadSafeQueue queue, int id) {
         this.socket = socket;
         this.request = request;
+        this.queue = queue;
+        this.id = id;
     }
 
     static int fib(int n)
@@ -43,7 +48,7 @@ public class Processor {
         socket.close();
     }
 
-    public void functions(PrintWriter output) throws IOException {
+    public void functions(PrintWriter output) {
         StringBuilder stringBuilder = new StringBuilder(request.getRequestLine());
         stringBuilder.delete(0,4);
         stringBuilder.delete(stringBuilder.length() - 9, stringBuilder.length() + 1);
@@ -122,4 +127,39 @@ public class Processor {
             output.flush();
         }
     }
+
+    @Override
+    public void run() {
+        try {
+            while (true) {
+                // Wait for new element.
+                T elem = queue.pop();
+                process();
+
+                // Stop consuming if null is received.
+                if (elem == null) {
+                    return;
+                }
+
+                // Process element.
+                System.out.println(id + ": get item: " + elem);
+
+            }
+        }
+        catch (InterruptedException | IOException ex) {
+            ex.printStackTrace();
+            throw new RuntimeException(ex);
+
+        }
+    }
+
+//    @Override
+//    public void run() {
+//        try {
+//            process();
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+
 }
